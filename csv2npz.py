@@ -18,7 +18,8 @@ def csv2dict(fileName):
             elif (col == 'people_id'):
                 row['people_id'] = float(row['people_id'].split('_')[1])
             elif (col == 'activity_id'):
-                row['activity_id'] = float((row['activity_id'].split('_')[1])) + 0.1 * float(re.search(r'(\d{1})', row['activity_id'].split('_')[0]).groups()[0]) #fuck it this MUST be easier!
+                row['activity_type'] = float(re.search(r'(\d{1})', row['activity_id'].split('_')[0]).groups()[0])
+                row['activity_id'] = float(row['activity_id'].split('_')[1])
             elif (col == 'date'):
                 row['date'] = (datetime.datetime.strptime(row['date'], "%Y-%m-%d") - datetime.datetime(1970, 1, 1)).total_seconds()
             
