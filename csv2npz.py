@@ -2,10 +2,11 @@ import csv
 import re
 import datetime
 import numpy
+import sys
 
-def csv2dict():
+def csv2dict(fileName):
     rows = []
-    with open ('act_train.csv') as f:
+    with open (fileName + '.csv') as f:
         rows = list(csv.DictReader(f))
     for row in rows:
         for col in row.keys():
@@ -25,12 +26,15 @@ def csv2dict():
             row['activity_category'] = row['activity_category'].split(' ')[1]
     return rows
 
-def dict2npz(rows):
+def dict2npz(rows, fileName):
     arr = numpy.zeros(len(rows), dtype=[(key, "f4") for key in rows[0].iterkeys()])
     for idx, row in enumerate(rows):
         for key, value in row.iteritems():
             arr[idx][key] = value
-    numpy.savez_compressed("act_train.npz", x=arr)
+    numpy.savez_compressed(fileName + ".npz", x=arr)
     
 
-dict2npz(csv2dict())
+
+
+fileName = sys.argv[1]
+dict2npz(csv2dict(fileName), fileName)
