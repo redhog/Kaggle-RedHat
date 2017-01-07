@@ -50,9 +50,8 @@ def placeholder_inputs(batch_size):
   # Note that the shapes of the placeholders match the shapes of the full
   # image and label tensors, except the first dimension is now batch_size
   # rather than the full size of the train or test data sets.
-  images_placeholder = tf.placeholder(tf.float32, shape=(batch_size,
-                                                         autoregression.IMAGE_PIXELS))
-  labels_placeholder = tf.placeholder(tf.int32, shape=(batch_size))
+  images_placeholder = tf.placeholder(tf.float32, shape=(batch_size, autoregression.IMAGE_PIXELS))
+  labels_placeholder = tf.placeholder(tf.float32, shape=(batch_size, autoregression.IMAGE_PIXELS))
   return images_placeholder, labels_placeholder
 
 
@@ -79,7 +78,7 @@ def fill_feed_dict(data_set, images_pl, labels_pl):
                                                  FLAGS.fake_data)
   feed_dict = {
       images_pl: images_feed,
-      labels_pl: labels_feed,
+      labels_pl: images_feed,
   }
   return feed_dict
 
@@ -127,8 +126,7 @@ def run_training():
 
     # Build a Graph that computes predictions from the inference model.
     logits = autoregression.inference(images_placeholder,
-                             FLAGS.hidden1,
-                             FLAGS.hidden2)
+                             FLAGS.hidden1)
 
     # Add to the Graph the Ops for loss calculation.
     loss = autoregression.loss(logits, labels_placeholder)
@@ -241,12 +239,6 @@ if __name__ == '__main__':
       type=int,
       default=128,
       help='Number of units in hidden layer 1.'
-  )
-  parser.add_argument(
-      '--hidden2',
-      type=int,
-      default=32,
-      help='Number of units in hidden layer 2.'
   )
   parser.add_argument(
       '--batch_size',
