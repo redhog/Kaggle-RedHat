@@ -163,13 +163,13 @@ if __name__ == '__main__':
   parser.add_argument(
       '--learning_rate',
       type=float,
-      default=0.01,
+      default=0.5,
       help='Initial learning rate.'
   )
   parser.add_argument(
       '--max_steps',
       type=int,
-      default=2000,
+      default=30000,
       help='Number of steps to run trainer.'
   )
   parser.add_argument(
