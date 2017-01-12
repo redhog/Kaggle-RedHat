@@ -37,7 +37,6 @@ FLAGS = None
 
 def generate_data(samples):
     base_features = int(math.ceil(math.sqrt(autoregression.IMAGE_PIXELS))) + 1
-
     base = np.random.rand(samples, base_features)
     res = ()
     for col1 in xrange(0, base_features):
@@ -133,9 +132,11 @@ def run_training():
   # Get the sets of images and labels for training, validation, and
   # test on AUTOREGRESSION.
   # data_sets = input_data.read_data_sets(FLAGS.input_data_dir, FLAGS.fake_data)
-
+  
   # Tell TensorFlow that the model will be built into the default Graph.
   with tf.Graph().as_default():
+    np.random.seed(1234)
+    tf.set_random_seed(1234)
     # Generate placeholders for the images and labels.
     images_placeholder, labels_placeholder = placeholder_inputs(
         FLAGS.batch_size)
