@@ -131,7 +131,7 @@ def run_cross():
     res = {}
     for lre in xrange(-5, 2):
         lr = 2.0**lre
-        FLAGS.learning_rate = lre
+        FLAGS.learning_rate = lr
         res[lr] = run_training()
         print("LEARNING RATE %s: loss=%s" % (lr, res[lr]))
     print()
@@ -163,7 +163,7 @@ if __name__ == '__main__':
   parser.add_argument(
       '--learning_rate',
       type=float,
-      default=0.5,
+      default=0.25,
       help='Initial learning rate.'
   )
   parser.add_argument(
