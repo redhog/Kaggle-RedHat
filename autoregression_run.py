@@ -75,7 +75,7 @@ def do_eval(sess,
   err = float(err) / steps_per_epoch
   print('  Num examples: %d  Loss: %0.04f' %
         (num_examples, err))
-
+  return err
 
 def run_training():
   with tf.Graph().as_default():
@@ -121,15 +121,45 @@ def run_training():
                 labels_placeholder,
                 None)
 
+    return do_eval(sess,
+                   loss,
+                   images_placeholder,
+                   labels_placeholder,
+                   None)
+
+def run_cross():
+    res = {}
+    for lre in xrange(-5, 2):
+        lr = 2.0**lre
+        FLAGS.learning_rate = lre
+        res[lr] = run_training()
+        print("LEARNING RATE %s: loss=%s" % (lr, res[lr]))
+    print()
+    print("Larning rate: Loss")
+    for key, value in res.iteritems():
+        print("%s: %s" % (key, value))
+
 def main(_):
   if tf.gfile.Exists(FLAGS.log_dir):
     tf.gfile.DeleteRecursively(FLAGS.log_dir)
   tf.gfile.MakeDirs(FLAGS.log_dir)
   run_training()
 
+def cross_main(_):
+  if tf.gfile.Exists(FLAGS.log_dir):
+    tf.gfile.DeleteRecursively(FLAGS.log_dir)
+  tf.gfile.MakeDirs(FLAGS.log_dir)
+  run_cross()
+
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
+  parser.add_argument(
+      '--cross_validate',
+      default=False,
+      help='Cross validate for learning rates.',
+      action='store_true'
+  )
   parser.add_argument(
       '--learning_rate',
       type=float,
@@ -174,4 +204,8 @@ if __name__ == '__main__':
   )
 
   FLAGS, unparsed = parser.parse_known_args()
-  tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
+
+  if FLAGS.cross_validate:
+    tf.app.run(main=cross_main, argv=[sys.argv[0]] + unparsed)
+  else:
+    tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
