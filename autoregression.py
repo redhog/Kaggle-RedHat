@@ -39,7 +39,7 @@ NUM_CLASSES = 10
 
 # The MNIST images are always 28x28 pixels.
 IMAGE_SIZE = 28
-IMAGE_PIXELS = IMAGE_SIZE * IMAGE_SIZE
+IMAGE_PIXELS = 16 # IMAGE_SIZE * IMAGE_SIZE
 
 
 def inference(images, hidden1_units):
@@ -52,26 +52,36 @@ def inference(images, hidden1_units):
   Returns:
     softmax_linear: Output tensor with the computed logits.
   """
-  # Hidden 1
-  with tf.name_scope('hidden1'):
-    weights = tf.Variable(
-        tf.truncated_normal([IMAGE_PIXELS, hidden1_units],
-                            stddev=1.0 / math.sqrt(float(IMAGE_PIXELS))),
-        name='weights')
-    biases = tf.Variable(tf.zeros([hidden1_units]),
-                         name='biases')
-    hidden1 = tf.nn.relu(tf.matmul(images, weights) + biases)
-  # Linear
-  with tf.name_scope('softmax_linear'):
-    weights = tf.Variable(
-        tf.truncated_normal([hidden1_units, IMAGE_PIXELS],
-                            stddev=1.0 / math.sqrt(float(hidden1_units))),
-        name='weights')
-    biases = tf.Variable(tf.zeros([IMAGE_PIXELS]),
-                         name='biases')
-    logits = tf.matmul(hidden1, weights) + biases
-  return logits
+  levels = 3
+  net = images
+  prev_size = IMAGE_PIXELS
+  for level in xrange(0, levels):
+    divider = 2**level
+    next_size = IMAGE_PIXELS // divider
+    with tf.name_scope('hidden_in_%s' % level):
+      weights = tf.Variable(
+          tf.truncated_normal([prev_size, next_size],
+                              stddev=1.0 / math.sqrt(float(prev_size))),
+          name='weights')
+      biases = tf.Variable(tf.zeros([next_size]),
+                           name='biases')
+      net = tf.nn.relu(tf.matmul(net, weights) + biases)
+      prev_size = next_size
 
+  for level in xrange(levels - 1, -1, -1):
+    divider = 2**level
+    next_size = IMAGE_PIXELS // divider
+    with tf.name_scope('hidden_out_%s' % level):
+      weights = tf.Variable(
+          tf.truncated_normal([prev_size, next_size],
+                              stddev=1.0 / math.sqrt(float(prev_size))),
+          name='weights')
+      biases = tf.Variable(tf.zeros([next_size]),
+                           name='biases')
+      net = tf.nn.relu(tf.matmul(net, weights) + biases)
+      prev_size = next_size
+
+  return net
 
 def loss(logits, labels):
   """Calculates the loss from the logits and the labels.

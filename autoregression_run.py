@@ -26,13 +26,26 @@ import time
 
 from six.moves import xrange  # pylint: disable=redefined-builtin
 import tensorflow as tf
+import numpy as np
 
 from tensorflow.examples.tutorials.mnist import input_data
 import autoregression
+import math
 
 # Basic model parameters as external flags.
 FLAGS = None
 
+def generate_data(samples):
+    base_features = int(math.ceil(math.sqrt(autoregression.IMAGE_PIXELS))) + 1
+
+    base = np.random.rand(samples, base_features)
+    res = ()
+    for col1 in xrange(0, base_features):
+        for col2 in xrange(0, base_features):
+            if col1 == col2: continue
+            res += (base[:,col1:col1+1] + base[:,col2:col2+1],)
+
+    return np.concatenate(res[:autoregression.IMAGE_PIXELS], axis=1)
 
 def placeholder_inputs(batch_size):
   """Generate placeholder variables to represent the input tensors.
@@ -74,17 +87,20 @@ def fill_feed_dict(data_set, images_pl, labels_pl):
   """
   # Create the feed_dict for the placeholders filled with the next
   # `batch size` examples.
-  images_feed, labels_feed = data_set.next_batch(FLAGS.batch_size,
-                                                 FLAGS.fake_data)
+#  images_feed, labels_feed = data_set.next_batch(FLAGS.batch_size,
+#                                                 FLAGS.fake_data)
+
+  data = generate_data(FLAGS.batch_size)
+
   feed_dict = {
-      images_pl: images_feed,
-      labels_pl: images_feed,
+      images_pl: data,
+      labels_pl: data,
   }
   return feed_dict
 
 
 def do_eval(sess,
-            eval_correct,
+            loss,
             images_placeholder,
             labels_placeholder,
             data_set):
@@ -99,24 +115,24 @@ def do_eval(sess,
       input_data.read_data_sets().
   """
   # And run one epoch of eval.
-  true_count = 0  # Counts the number of correct predictions.
-  steps_per_epoch = data_set.num_examples // FLAGS.batch_size
+  steps_per_epoch = 100 # data_set.num_examples // FLAGS.batch_size
   num_examples = steps_per_epoch * FLAGS.batch_size
+  err = 0
   for step in xrange(steps_per_epoch):
     feed_dict = fill_feed_dict(data_set,
                                images_placeholder,
                                labels_placeholder)
-    true_count += sess.run(eval_correct, feed_dict=feed_dict)
-  precision = float(true_count) / num_examples
-  print('  Num examples: %d  Num correct: %d  Precision @ 1: %0.04f' %
-        (num_examples, true_count, precision))
+    err += sess.run(loss, feed_dict=feed_dict)
+  err = float(err) / steps_per_epoch
+  print('  Num examples: %d  Loss: %0.04f' %
+        (num_examples, err))
 
 
 def run_training():
   """Train AUTOREGRESSION for a number of steps."""
   # Get the sets of images and labels for training, validation, and
   # test on AUTOREGRESSION.
-  data_sets = input_data.read_data_sets(FLAGS.input_data_dir, FLAGS.fake_data)
+  # data_sets = input_data.read_data_sets(FLAGS.input_data_dir, FLAGS.fake_data)
 
   # Tell TensorFlow that the model will be built into the default Graph.
   with tf.Graph().as_default():
@@ -163,7 +179,7 @@ def run_training():
 
       # Fill a feed dictionary with the actual set of images and labels
       # for this particular training step.
-      feed_dict = fill_feed_dict(data_sets.train,
+      feed_dict = fill_feed_dict(None,
                                  images_placeholder,
                                  labels_placeholder)
 
@@ -180,7 +196,7 @@ def run_training():
       # Write the summaries and print an overview fairly often.
       if step % 100 == 0:
         # Print status to stdout.
-        print('Step %d: loss = %.2f (%.3f sec)' % (step, loss_value, duration))
+        print('Step %d: loss = %0.04f (%.3f sec)' % (step, loss_value, duration))
         # Update the events file.
         summary_str = sess.run(summary, feed_dict=feed_dict)
         summary_writer.add_summary(summary_str, step)
@@ -193,25 +209,10 @@ def run_training():
         # Evaluate against the training set.
         print('Training Data Eval:')
         do_eval(sess,
-                eval_correct,
+                loss,
                 images_placeholder,
                 labels_placeholder,
-                data_sets.train)
-        # Evaluate against the validation set.
-        print('Validation Data Eval:')
-        do_eval(sess,
-                eval_correct,
-                images_placeholder,
-                labels_placeholder,
-                data_sets.validation)
-        # Evaluate against the test set.
-        print('Test Data Eval:')
-        do_eval(sess,
-                eval_correct,
-                images_placeholder,
-                labels_placeholder,
-                data_sets.test)
-
+                None)
 
 def main(_):
   if tf.gfile.Exists(FLAGS.log_dir):
