@@ -32,25 +32,19 @@ import math
 
 FLAGS = None
 
-def generate_data(samples):
-    base_features = int(math.ceil(math.sqrt(autoregression.IMAGE_PIXELS))) + 1
-    base = np.random.rand(samples, base_features)
-    res = ()
-    for col1 in xrange(0, base_features):
-        for col2 in xrange(0, base_features):
-            if col1 == col2: continue
-            res += (base[:,col1:col1+1] + base[:,col2:col2+1],)
-
-    return np.concatenate(res[:autoregression.IMAGE_PIXELS], axis=1)
-
 def placeholder_inputs(batch_size):
-  images_placeholder = tf.placeholder(tf.float32, shape=(batch_size, autoregression.IMAGE_PIXELS))
-  labels_placeholder = tf.placeholder(tf.float32, shape=(batch_size, autoregression.IMAGE_PIXELS))
+  images_placeholder = tf.placeholder(tf.float32, shape=(batch_size, autoregression.NR_OF_FEATURES))
+  labels_placeholder = tf.placeholder(tf.float32, shape=(batch_size, autoregression.NR_OF_FEATURES))
   return images_placeholder, labels_placeholder
 
 
-def fill_feed_dict(data_set, images_pl, labels_pl):
-  data = generate_data(FLAGS.batch_size)
+batchnr = 0
+def fill_feed_dict(dataset, images_pl, labels_pl):
+  global batchnr
+  start = (batchnr * FLAGS.batch_size) % len(dataset)
+  stop = start + FLAGS.batch_size
+  data = dataset[start:stop,:]
+  batchnr += 1
 
   feed_dict = {
       images_pl: data,
@@ -78,6 +72,9 @@ def do_eval(sess,
   return err
 
 def run_training():
+  dataset = np.load("act_train.npz")['x'][:1000]
+  dataset = dataset.view((np.float32, len(dataset.dtype.names)))[:,1:]
+
   with tf.Graph().as_default():
     np.random.seed(1234)
     tf.set_random_seed(12)
@@ -97,7 +94,7 @@ def run_training():
     sess.run(init)
     for step in xrange(FLAGS.max_steps):
       start_time = time.time()
-      feed_dict = fill_feed_dict(None,
+      feed_dict = fill_feed_dict(dataset,
                                  images_placeholder,
                                  labels_placeholder)
       _, loss_value = sess.run([train_op, loss],
@@ -119,13 +116,13 @@ def run_training():
                 loss,
                 images_placeholder,
                 labels_placeholder,
-                None)
+                dataset)
 
     return do_eval(sess,
                    loss,
                    images_placeholder,
                    labels_placeholder,
-                   None)
+                   dataset)
 
 def run_cross():
     res = {}

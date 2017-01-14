@@ -21,19 +21,15 @@ import math
 
 import tensorflow as tf
 
-NUM_CLASSES = 10
-
-# The MNIST images are always 28x28 pixels.
-IMAGE_SIZE = 28
-IMAGE_PIXELS = 16 # IMAGE_SIZE * IMAGE_SIZE
+NR_OF_FEATURES = 15
 
 
 def inference(data_placeholder, levels=3, level_thickness=1):
   net = data_placeholder
-  prev_size = IMAGE_PIXELS
+  prev_size = NR_OF_FEATURES
   for level in xrange(0, levels):
     divider = 2**level
-    next_size = IMAGE_PIXELS // divider
+    next_size = NR_OF_FEATURES // divider
     for layer in xrange(level_thickness):
       with tf.name_scope('hidden_in_%s_%s' % (level, layer)):
         weights = tf.Variable(
@@ -44,12 +40,12 @@ def inference(data_placeholder, levels=3, level_thickness=1):
                              name='biases')
         net = tf.nn.relu(tf.matmul(net, weights) + biases)
         prev_size = next_size
-        tf.summary.histogram('weights_in_%s_%s' % (level, layer), weights)
-        tf.summary.histogram('biases_in_%s_%s' % (level, layer), biases)
+        # tf.summary.histogram('weights_in_%s_%s' % (level, layer), weights)
+        # tf.summary.histogram('biases_in_%s_%s' % (level, layer), biases)
 
   for level in xrange(levels - 1, -1, -1):
     divider = 2**level
-    next_size = IMAGE_PIXELS // divider
+    next_size = NR_OF_FEATURES // divider
     for layer in xrange(level_thickness):
       with tf.name_scope('hidden_out_%s_%s' % (level, layer)):
         weights = tf.Variable(
@@ -60,8 +56,8 @@ def inference(data_placeholder, levels=3, level_thickness=1):
                              name='biases')
         net = tf.nn.relu(tf.matmul(net, weights) + biases)
         prev_size = next_size
-        tf.summary.histogram('weights_out_%s_%s' % (level, layer), weights)
-        tf.summary.histogram('biases_out_%s_%s' % (level, layer), biases)
+        #tf.summary.histogram('weights_out_%s_%s' % (level, layer), weights)
+        #tf.summary.histogram('biases_out_%s_%s' % (level, layer), biases)
 
   return net
 
@@ -81,5 +77,5 @@ def evaluation(logits, labels):
   return loss(logits, labels)
 
 def evaluate_absolute_error(logits, labels):
-  tf.summary.histogram('absolute error', logits-labels)
+  #tf.summary.histogram('absolute error', logits-labels)
   return logits - labels
