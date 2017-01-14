@@ -79,14 +79,14 @@ def do_eval(sess,
 
 def run_training():
   with tf.Graph().as_default():
-    np.random.seed(1234)
-    tf.set_random_seed(1234)
+    np.random.seed(12)
+    tf.set_random_seed(12)
     images_placeholder, labels_placeholder = placeholder_inputs(
         FLAGS.batch_size)
 
-    logits = autoregression.inference(images_placeholder,
-                             FLAGS.hidden1)
+    logits = autoregression.inference(images_placeholder, FLAGS.levels, FLAGS.level_thickness)
     loss = autoregression.loss(logits, labels_placeholder)
+    autoregression.evaluate_absolute_error(logits, labels_placeholder)
     train_op = autoregression.training(loss, FLAGS.learning_rate)
     eval_correct = autoregression.evaluation(logits, labels_placeholder)
     summary = tf.summary.merge_all()
@@ -165,6 +165,18 @@ if __name__ == '__main__':
       type=float,
       default=0.25,
       help='Initial learning rate.'
+  )
+  parser.add_argument(
+      '--levels',
+      type=int,
+      default=1,
+      help='Number of levels to half the layer width.'
+  )
+  parser.add_argument(
+      '--level_thickness',
+      type=int,
+      default=1,
+      help='Number of layers of the same width'
   )
   parser.add_argument(
       '--max_steps',

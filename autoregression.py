@@ -28,35 +28,36 @@ IMAGE_SIZE = 28
 IMAGE_PIXELS = 16 # IMAGE_SIZE * IMAGE_SIZE
 
 
-def inference(images, hidden1_units):
-  levels = 3
-  net = images
+def inference(data_placeholder, levels=3, level_thickness=1):
+  net = data_placeholder
   prev_size = IMAGE_PIXELS
   for level in xrange(0, levels):
     divider = 2**level
     next_size = IMAGE_PIXELS // divider
-    with tf.name_scope('hidden_in_%s' % level):
-      weights = tf.Variable(
+    for layer in xrange(level_thickness):
+      with tf.name_scope('hidden_in_%s_%s' % (level, layer)):
+        weights = tf.Variable(
           tf.truncated_normal([prev_size, next_size],
                               stddev=1.0 / math.sqrt(float(prev_size))),
           name='weights')
-      biases = tf.Variable(tf.zeros([next_size]),
-                           name='biases')
-      net = tf.nn.relu(tf.matmul(net, weights) + biases)
-      prev_size = next_size
-
+        biases = tf.Variable(tf.zeros([next_size]),
+                             name='biases')
+        net = tf.nn.relu(tf.matmul(net, weights) + biases)
+        prev_size = next_size
+      
   for level in xrange(levels - 1, -1, -1):
     divider = 2**level
     next_size = IMAGE_PIXELS // divider
-    with tf.name_scope('hidden_out_%s' % level):
-      weights = tf.Variable(
+    for layer in xrange(level_thickness):
+      with tf.name_scope('hidden_out_%s_%s' % (level, layer)):
+        weights = tf.Variable(
           tf.truncated_normal([prev_size, next_size],
                               stddev=1.0 / math.sqrt(float(prev_size))),
           name='weights')
-      biases = tf.Variable(tf.zeros([next_size]),
-                           name='biases')
-      net = tf.nn.relu(tf.matmul(net, weights) + biases)
-      prev_size = next_size
+        biases = tf.Variable(tf.zeros([next_size]),
+                             name='biases')
+        net = tf.nn.relu(tf.matmul(net, weights) + biases)
+        prev_size = next_size
 
   return net
 
@@ -66,6 +67,8 @@ def loss(logits, labels):
 
 def training(loss, learning_rate):
   tf.summary.scalar('loss', loss)
+#  tf.summary.scalar('weights', weights)
+#  tf.summary.scalar('biases', biases)
   optimizer = tf.train.GradientDescentOptimizer(learning_rate)
   global_step = tf.Variable(0, name='global_step', trainable=False)
   train_op = optimizer.minimize(loss, global_step=global_step)
@@ -74,3 +77,7 @@ def training(loss, learning_rate):
 
 def evaluation(logits, labels):
   return loss(logits, labels)
+
+def evaluate_absolute_error(logits, labels):
+  tf.summary.histogram('absolute error', logits-labels)
+  return logits - labels
