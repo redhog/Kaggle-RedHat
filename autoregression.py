@@ -44,7 +44,9 @@ def inference(data_placeholder, levels=3, level_thickness=1):
                              name='biases')
         net = tf.nn.relu(tf.matmul(net, weights) + biases)
         prev_size = next_size
-      
+        tf.summary.histogram('weights_in_%s_%s' % (level, layer), weights)
+        tf.summary.histogram('biases_in_%s_%s' % (level, layer), biases)
+
   for level in xrange(levels - 1, -1, -1):
     divider = 2**level
     next_size = IMAGE_PIXELS // divider
@@ -58,6 +60,8 @@ def inference(data_placeholder, levels=3, level_thickness=1):
                              name='biases')
         net = tf.nn.relu(tf.matmul(net, weights) + biases)
         prev_size = next_size
+        tf.summary.histogram('weights_out_%s_%s' % (level, layer), weights)
+        tf.summary.histogram('biases_out_%s_%s' % (level, layer), biases)
 
   return net
 
@@ -67,8 +71,6 @@ def loss(logits, labels):
 
 def training(loss, learning_rate):
   tf.summary.scalar('loss', loss)
-#  tf.summary.scalar('weights', weights)
-#  tf.summary.scalar('biases', biases)
   optimizer = tf.train.GradientDescentOptimizer(learning_rate)
   global_step = tf.Variable(0, name='global_step', trainable=False)
   train_op = optimizer.minimize(loss, global_step=global_step)

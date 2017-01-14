@@ -79,7 +79,7 @@ def do_eval(sess,
 
 def run_training():
   with tf.Graph().as_default():
-    np.random.seed(12)
+    np.random.seed(1234)
     tf.set_random_seed(12)
     images_placeholder, labels_placeholder = placeholder_inputs(
         FLAGS.batch_size)
