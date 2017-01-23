@@ -46,6 +46,10 @@ def fill_feed_dict(dataset, images_pl, labels_pl):
   data = dataset[start:stop,:]
   batchnr += 1
 
+  for col in xrange(0, data.shape[1]):
+    data[:,col] = data[:,col] - dataset[:,col].mean()
+    data[:,col] = data[:,col] / dataset[:,col].std()
+
   feed_dict = {
       images_pl: data,
       labels_pl: data,
@@ -104,6 +108,7 @@ def run_training():
 
       if step % 100 == 0:
         print('Step %d: loss = %0.04f (%.3f sec)' % (step, loss_value, duration))
+
         summary_str = sess.run(summary, feed_dict=feed_dict)
         summary_writer.add_summary(summary_str, step)
         summary_writer.flush()

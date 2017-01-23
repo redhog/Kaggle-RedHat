@@ -23,7 +23,6 @@ import tensorflow as tf
 
 NR_OF_FEATURES = 15
 
-
 def inference(data_placeholder, levels=3, level_thickness=1):
   net = data_placeholder
   prev_size = NR_OF_FEATURES
