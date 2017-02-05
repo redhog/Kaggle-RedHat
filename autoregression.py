@@ -23,11 +23,11 @@ import tensorflow as tf
 
 NR_OF_FEATURES = 15
 
-def inference(data_placeholder, levels=3, level_thickness=1):
+def inference(data_placeholder, dividerbase=2, levels=3, level_thickness=1):
   net = data_placeholder
   prev_size = NR_OF_FEATURES
   for level in xrange(0, levels):
-    divider = 2**level
+    divider = dividerbase**level
     next_size = NR_OF_FEATURES // divider
     for layer in xrange(level_thickness):
       with tf.name_scope('hidden_in_%s_%s' % (level, layer)):
@@ -43,7 +43,7 @@ def inference(data_placeholder, levels=3, level_thickness=1):
         # tf.summary.histogram('biases_in_%s_%s' % (level, layer), biases)
 
   for level in xrange(levels - 1, -1, -1):
-    divider = 2**level
+    divider = dividerbase**level
     next_size = NR_OF_FEATURES // divider
     for layer in xrange(level_thickness):
       with tf.name_scope('hidden_out_%s_%s' % (level, layer)):

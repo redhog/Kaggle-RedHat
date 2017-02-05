@@ -85,7 +85,7 @@ def run_training():
     images_placeholder, labels_placeholder = placeholder_inputs(
         FLAGS.batch_size)
 
-    logits = autoregression.inference(images_placeholder, FLAGS.levels, FLAGS.level_thickness)
+    logits = autoregression.inference(images_placeholder, FLAGS.divider, FLAGS.levels, FLAGS.level_thickness)
     loss = autoregression.loss(logits, labels_placeholder)
     autoregression.evaluate_absolute_error(logits, labels_placeholder)
     train_op = autoregression.training(loss, FLAGS.learning_rate)
@@ -187,10 +187,10 @@ if __name__ == '__main__':
       help='Number of steps to run trainer.'
   )
   parser.add_argument(
-      '--hidden1',
-      type=int,
-      default=128,
-      help='Number of units in hidden layer 1.'
+      '--divider',
+      type=float,
+      default=2.,
+      help='Divide nr of nodes by this for each level.'
   )
   parser.add_argument(
       '--batch_size',
